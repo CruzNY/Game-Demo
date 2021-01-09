@@ -32,11 +32,52 @@ public class GamePanel extends JPanel implements Runnable{
     @Override
     public void run() {
         init();
+        // Game Loop
+        final double GAME_HERTZ = 60.0;
+        final double TBU = 1000000000 / GAME_HERTZ; // TIME BEFORE UPDATE
+        final double MUBR = 5; // MUST UPDATE BEFORE RENDER
+        final double TARGET_FPS = 60;
+        final double  TTBR = 1000000000 / TARGET_FPS; // TOTOAL TIME BEFORE RENDER
+        double lastUpdateTime = System.nanoTime();
+        int frameCounter = 0;
+        int lastSecondTime = (int) (lastUpdateTime / 1000000000);
+        int oldFrameCounter = 0;
+        double lastRenderTime;
         while(running){
-            update();
+            double now = System.nanoTime();
+            int updateCount = 0;
+            while(((now - lastUpdateTime)> TBU) && (updateCount<MUBR)){
+                update();
+                lastUpdateTime += TBU;
+                input();
+                updateCount++;
+            }
+            if(now - lastUpdateTime> TBU){
+                lastUpdateTime = now - TBU;
+            }
+            input();
             render();
             draw();
-
+            lastRenderTime = now;
+            frameCounter++;
+            int thisSecond = (int)(lastUpdateTime / 1000000000);
+            if(thisSecond > lastSecondTime){
+                if(frameCounter != oldFrameCounter){
+                    System.out.println("new sceond: " + thisSecond + " " +frameCounter);
+                    oldFrameCounter = frameCounter;
+                }
+                frameCounter = 0;
+                lastSecondTime = thisSecond;
+            }
+            while(now - lastRenderTime < TTBR && now - lastUpdateTime < TBU){
+                Thread.yield();
+                try{
+                    Thread.sleep(1);
+                }catch(Exception e){
+                    System.out.println("ERROR: Yielding Thread");
+                }
+                now = System.nanoTime();
+            }
         }
     }
     public void init(){
@@ -47,8 +88,18 @@ public class GamePanel extends JPanel implements Runnable{
     public void update(){
     }
     public void render(){
+        if(g != null){
+            g.setColor(new Color( 66,134,244));
+            g.fillRect(0,0,width,height);
+        }
     }
     public void draw(){
+        // Calling method in JPanel
+        Graphics g2 = (Graphics) this.getGraphics();
+        g2.drawImage(img, 0, 0,width,height,null);
+        g2.dispose();
     }
+    public void input(){
 
+    }
 }
