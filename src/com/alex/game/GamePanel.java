@@ -1,5 +1,9 @@
 package com.alex.game;
 
+import com.alex.game.states.GameStateManager;
+import com.alex.game.util.KeyHandler;
+import com.alex.game.util.MouseHandler;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -7,11 +11,13 @@ import java.awt.image.BufferedImage;
 public class GamePanel extends JPanel implements Runnable{
     public static int width;
     public static int height;
-
     private Thread thread;
     private BufferedImage img;
     private Graphics2D g;
     private boolean running = false;
+    private KeyHandler key;
+    private MouseHandler mouse;
+    private GameStateManager gsm;
 
     public GamePanel(int width, int height){
         this.width = width;
@@ -49,13 +55,13 @@ public class GamePanel extends JPanel implements Runnable{
             while(((now - lastUpdateTime)> TBU) && (updateCount<MUBR)){
                 update();
                 lastUpdateTime += TBU;
-                input();
+                input(mouse, key);
                 updateCount++;
             }
             if(now - lastUpdateTime> TBU){
                 lastUpdateTime = now - TBU;
             }
-            input();
+            input(mouse, key);
             render();
             draw();
             lastRenderTime = now;
@@ -84,13 +90,18 @@ public class GamePanel extends JPanel implements Runnable{
         running = true;
         img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         g = (Graphics2D) img.getGraphics();
+        mouse = new MouseHandler();
+        key = new KeyHandler();
+        gsm = new GameStateManager();
     }
     public void update(){
+        gsm.update();
     }
     public void render(){
         if(g != null){
             g.setColor(new Color( 66,134,244));
             g.fillRect(0,0,width,height);
+            gsm.render(g);
         }
     }
     public void draw(){
@@ -99,7 +110,7 @@ public class GamePanel extends JPanel implements Runnable{
         g2.drawImage(img, 0, 0,width,height,null);
         g2.dispose();
     }
-    public void input(){
-
+    public void input(MouseHandler mouse, KeyHandler key){
+        gsm.input(mouse,key);
     }
 }
